@@ -1,43 +1,58 @@
 <!--
-*** Please remove the following help text before submitting: ***
+Please remove explanatory notes before submitting.
 
-Pull requests without a rationale and clear improvement may be closed
-immediately.
-
-GUI-related pull requests should be opened against
+GUI-related pull requests should be opened against:
 https://github.com/bitcoin-core/gui
-first. See CONTRIBUTING.md
+See CONTRIBUTING.md for contribution guidelines.
 -->
 
-<!--
-Please provide clear motivation for your patch and explain how it improves
-Bitcoin Core user experience or Bitcoin Core developer experience
-significantly:
+## Summary
+Short description of the change (one or two sentences).
 
-* Any test improvements or new tests that improve coverage are always welcome.
-* All other changes should have accompanying unit tests (see `src/test/`) or
-  functional tests (see `test/`). Contributors should note which tests cover
-  modified code. If no tests exist for a region of modified code, new tests
-  should accompany the change.
-* Bug fixes are most welcome when they come with steps to reproduce or an
-  explanation of the potential issue as well as reasoning for the way the bug
-  was fixed.
-* Features are welcome, but might be rejected due to design or scope issues.
-  If a feature is based on a lot of dependencies, contributors should first
-  consider building the system outside of Bitcoin Core, if possible.
-* Refactoring changes are only accepted if they are required for a feature or
-  bug fix or otherwise improve developer experience significantly. For example,
-  most "code style" refactoring changes require a thorough explanation why they
-  are useful, what downsides they have and why they *significantly* improve
-  developer experience or avoid serious programming bugs. Note that code style
-  is often a subjective matter. Unless they are explicitly mentioned to be
-  preferred in the [developer notes](/doc/developer-notes.md), stylistic code
-  changes are usually rejected.
--->
+## Motivation and Context
+Why is this change required? What problem does it solve? Link to any relevant issues.
+
+## Description
+What did you change and how? Describe the approach at a high level.
+
+## How to test
+Step-by-step instructions to verify the change locally (unit / functional test commands, config, etc).
+
+## Types of changes
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Refactor
+- [ ] Documentation
+- [ ] CI/build changes
+- [ ] Tests
+- [ ] Other (please describe):
+
+## Checklist
+- [ ] I have added or updated tests that cover my changes
+- [ ] I ran the test suite relevant to my change (unit/functional)
+- [ ] I updated documentation where appropriate (doc/ or comments)
+- [ ] Code follows the project's coding style and guidelines
+- [ ] All CI checks pass (or I explain why they're not applicable)
+- [ ] This change is small enough to be reviewed comfortably
+
+## Backwards compatibility / Consensus impact
+Does this change affect consensus rules or RPC/ABI? If yes, explain how and include upgrade steps.
+
+## Security considerations
+Describe any security/privacy implications of this change.
+
+## Release notes
+One-line summary for release notes (if applicable).
+
+## Related issues/PRs
+- Fixes: #<issue>
+- Related: #<issue or PR>
+
+## Reviewer notes
+Anything you want reviewers to focus on; suggested reviewers or areas of the code to check.
 
 <!--
-Bitcoin Core has a thorough review process and even the most trivial change
-needs to pass a lot of eyes and requires non-zero or even substantial time
-effort to review. There is a huge lack of active reviewers on the project, so
-patches often sit for a long time.
+Notes for contributors:
+* Tests: prefer unit tests in `src/test/` or functional tests in `test/`. Note which tests cover modified code.
+* Large architectural changes should be discussed on the issue tracker or mailing list first.
 -->
