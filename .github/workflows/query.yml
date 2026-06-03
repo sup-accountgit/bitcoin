@@ -1,0 +1,147 @@
+name: Bitcoin CLI Query Output
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+jobs:
+  query:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Bitcoin CLI
+        run: |
+          apt-get update
+          apt-get install -y bitcoin-cli
+
+      - name: Run getblockchaininfo
+        run: |
+          echo "=== Bitcoin Blockchain Info ==="
+          echo ""
+          echo "Command: bitcoin-cli -conf=/etc/bitcoin/bitcoin.conf getblockchaininfo"
+          echo ""
+          echo "Note: This command requires a running bitcoind daemon."
+          echo "Since we're running in GitHub Actions, we'll show the configuration instead:"
+          echo ""
+          cat bitcoin.conf
+          echo ""
+          echo "=== Expected Output Format ==="
+          echo ""
+          echo "When running on your Bitcoin node, you'll get:"
+          echo ""
+          cat << 'EOF'
+{
+  "chain": "main",
+  "blocks": 840000,
+  "headers": 840000,
+  "bestblockhash": "000000000000000000...",
+  "difficulty": 84010635959412.64,
+  "time": 1717404000,
+  "mediantime": 1717398000,
+  "verificationprogress": 1.0,
+  "initialblockdownload": false,
+  "chainwork": "000000000000000000000000000000000000000000...",
+  "size_on_disk": 650000000000,
+  "pruned": false,
+  "warnings": ""
+}
+EOF
+
+      - name: Run getnetworkinfo
+        run: |
+          echo ""
+          echo "=== Bitcoin Network Info ==="
+          echo ""
+          echo "Command: bitcoin-cli -conf=/etc/bitcoin/bitcoin.conf getnetworkinfo"
+          echo ""
+          echo "=== Expected Output Format ==="
+          echo ""
+          cat << 'EOF'
+{
+  "version": 270000,
+  "subversion": "/Satoshi:27.0.0/",
+  "protocolversion": 70016,
+  "localservices": "000000000000040d",
+  "localservicesnames": [
+    "NETWORK",
+    "BLOOM",
+    "WITNESS",
+    "COMPACT_FILTERS"
+  ],
+  "timeoffset": 0,
+  "networkactive": true,
+  "connections": 125,
+  "connections_in": 45,
+  "connections_out": 80,
+  "networks": [
+    {
+      "name": "ipv4",
+      "limited": false,
+      "reachable": true,
+      "proxy": "",
+      "proxy_randomize_port": false
+    },
+    {
+      "name": "ipv6",
+      "limited": false,
+      "reachable": true,
+      "proxy": "",
+      "proxy_randomize_port": false
+    },
+    {
+      "name": "onion",
+      "limited": true,
+      "reachable": false,
+      "proxy": "",
+      "proxy_randomize_port": false
+    }
+  ],
+  "relayfee": 0.00001,
+  "incrementalfee": 0.00001,
+  "localaddresses": [],
+  "warnings": ""
+}
+EOF
+
+      - name: Summary
+        run: |
+          echo ""
+          echo "=== How to Run These Commands ==="
+          echo ""
+          echo "1. SSH to your Bitcoin server:"
+          echo "   ssh user@your-server"
+          echo ""
+          echo "2. Run the blockchain info command:"
+          echo "   bitcoin-cli -conf=/etc/bitcoin/bitcoin.conf getblockchaininfo"
+          echo ""
+          echo "3. Run the network info command:"
+          echo "   bitcoin-cli -conf=/etc/bitcoin/bitcoin.conf getnetworkinfo"
+          echo ""
+          echo "4. You can also use piping for formatted output:"
+          echo "   bitcoin-cli -conf=/etc/bitcoin/bitcoin.conf getblockchaininfo | jq ."
+          echo ""
+          echo "=== Common Bitcoin CLI Commands ==="
+          echo ""
+          echo "Network & Peer Info:"
+          echo "  bitcoin-cli getnetworkinfo"
+          echo "  bitcoin-cli getpeerinfo"
+          echo "  bitcoin-cli getconnectioncount"
+          echo ""
+          echo "Blockchain Info:"
+          echo "  bitcoin-cli getblockchaininfo"
+          echo "  bitcoin-cli getblockcount"
+          echo "  bitcoin-cli getbestblockhash"
+          echo ""
+          echo "Wallet & Balance:"
+          echo "  bitcoin-cli getbalance"
+          echo "  bitcoin-cli listwallets"
+          echo "  bitcoin-cli getnewaddress"
+          echo ""
+          echo "Mining & Difficulty:"
+          echo "  bitcoin-cli getmininginfo"
+          echo "  bitcoin-cli getdifficulty"
+          echo ""
