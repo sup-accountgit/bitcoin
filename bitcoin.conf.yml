@@ -1,0 +1,64 @@
+bitcoin:
+  # Bitcoin Core Configuration in YAML format
+  # This can be converted to bitcoin.conf using a script
+  
+  network:
+    mainnet: true
+    testnet: false
+    regtest: false
+
+  server:
+    enabled: true
+    daemon: true
+    pidfile: /var/run/bitcoin/bitcoind.pid
+
+  rpc:
+    enabled: true
+    bind: 127.0.0.1
+    port: 8332
+    user: secret.RPC_USER
+    password: secret.RPC_PASSWORD
+    allowip:
+      - 127.0.0.1
+      - ::1
+
+  directories:
+    data: /var/lib/bitcoin
+    wallet: /var/lib/bitcoin/wallets
+
+  wallet:
+    default: default_wallet
+    directory: /var/lib/bitcoin/wallets
+
+  p2p:
+    port: 8333
+    maxconnections: 125
+    connect: []
+    addnode: []
+
+  blockchain:
+    prune: false
+
+  logging:
+    timestamps: true
+    ips: true
+
+  debug:
+    enabled: false
+    # options:
+    #   - net
+    #   - wallets
+    #   - rpc
+
+  fees:
+    fallback: 0.0001  # satoshis per byte
+    minrelay: 0.00001 # satoshis per byte
+
+  performance:
+    dbcache: 450      # MB
+    maxmempool: 300   # MB
+
+  notifications:
+    # Optional webhook notifications
+    # walletnotify: "curl -X POST http://localhost:8080/wallet-notify?txid=%s"
+    # blocknotify: "curl -X POST http://localhost:8080/block-notify?hash=%s"
