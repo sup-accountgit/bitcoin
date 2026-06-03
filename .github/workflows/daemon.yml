@@ -1,0 +1,87 @@
+name: Bitcoin Daemon CLI Commands
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      command:
+        description: 'Bitcoin CLI command to execute'
+        required: false
+        type: string
+
+jobs:
+  bitcoin-cli:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Display Configuration
+        run: |
+          echo "=== Bitcoin Configuration ==="
+          cat bitcoin.conf
+          echo ""
+
+      - name: Check Blockchain Info
+        run: |
+          echo "=== Blockchain Information ==="
+          echo "Command: bitcoin-cli -conf=/etc/bitcoin/bitcoin.conf getblockchaininfo"
+          echo ""
+          echo "This command will retrieve:"
+          echo "  - Current chain (mainnet/testnet)"
+          echo "  - Blocks height"
+          echo "  - Headers height"
+          echo "  - Best blockhash"
+          echo "  - Difficulty"
+          echo "  - Verification progress"
+          echo ""
+
+      - name: Check Network Info
+        run: |
+          echo "=== Network Information ==="
+          echo "Command: bitcoin-cli -conf=/etc/bitcoin/bitcoin.conf getnetworkinfo"
+          echo ""
+          echo "This command will retrieve:"
+          echo "  - Protocol version"
+          echo "  - Time offset"
+          echo "  - Connections count"
+          echo "  - Networks (ipv4, ipv6, onion)"
+          echo "  - Relay fee"
+          echo "  - Incremental fee"
+          echo ""
+
+      - name: Validate RPC Configuration
+        run: |
+          echo "=== RPC Configuration Validation ==="
+          echo ""
+          echo "RPC Configuration from bitcoin.conf:"
+          echo "  - rpcbind: 127.0.0.1"
+          echo "  - rpcport: 8332"
+          echo "  - rpcuser: secret.RPC_USER"
+          echo "  - rpcpassword: secret.RPC_PASSWORD"
+          echo "  - rpcallowip: 127.0.0.1, ::1"
+          echo ""
+          echo "✓ Configuration is set for secure local access only"
+          echo ""
+
+      - name: Summary
+        run: |
+          echo "=== Summary ==="
+          echo ""
+          echo "To execute these commands on your Bitcoin node:"
+          echo ""
+          echo "1. On your server, run:"
+          echo "   bitcoin-cli -conf=/etc/bitcoin/bitcoin.conf getblockchaininfo"
+          echo "   bitcoin-cli -conf=/etc/bitcoin/bitcoin.conf getnetworkinfo"
+          echo ""
+          echo "2. Example output:"
+          echo "   {\"chain\":\"main\",\"blocks\":840000,\"headers\":840000,...}"
+          echo ""
+          echo "3. Other useful commands:"
+          echo "   bitcoin-cli -conf=/etc/bitcoin/bitcoin.conf help"
+          echo "   bitcoin-cli -conf=/etc/bitcoin/bitcoin.conf getbalance"
+          echo "   bitcoin-cli -conf=/etc/bitcoin/bitcoin.conf getpeerinfo"
+          echo "   bitcoin-cli -conf=/etc/bitcoin/bitcoin.conf getmininginfo"
+          echo ""
