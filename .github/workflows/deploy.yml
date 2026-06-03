@@ -1,0 +1,113 @@
+name: Deploy Bitcoin Core with systemd
+
+on:
+  push:
+    branches:
+      - deployment/systemd-github-actions
+  workflow_dispatch:
+    inputs:
+      target_server:
+        description: 'Target server IP or hostname'
+        required: false
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate configuration
+        run: |
+          echo "Validating Bitcoin configuration..."
+          if [ ! -f bitcoin.conf ]; then
+            echo "ERROR: bitcoin.conf not found"
+            exit 1
+          fi
+          if [ ! -f bitcoin.service ]; then
+            echo "ERROR: bitcoin.service not found"
+            exit 1
+          fi
+          echo "✓ Configuration files validated"
+
+      - name: Prepare deployment package
+        run: |
+          mkdir -p deployment-pkg
+          cp bitcoin.conf deployment-pkg/
+          cp bitcoin.service deployment-pkg/
+          cp install.sh deployment-pkg/
+          echo "Deployment package ready"
+          ls -la deployment-pkg/
+
+      - name: Generate deployment instructions
+        env:
+          RPC_USER: ${{ secrets.RPC_USER }}
+          RPC_PASSWORD: ${{ secrets.RPC_PASSWORD }}
+        run: |
+          echo "=== Bitcoin Core Deployment Instructions ==="
+          echo ""
+          echo "1. SSH into your target server"
+          echo "2. Create bitcoin user and directories:"
+          echo "   sudo useradd -r -s /bin/bash -m bitcoin"
+          echo "   sudo mkdir -p /var/lib/bitcoin /etc/bitcoin"
+          echo "   sudo chown bitcoin:bitcoin /var/lib/bitcoin /etc/bitcoin"
+          echo ""
+          echo "3. Copy files to server:"
+          echo "   scp -r deployment-pkg/* user@server:/tmp/bitcoin-deploy/"
+          echo ""
+          echo "4. SSH to server and run:"
+          echo "   ssh user@server"
+          echo "   cd /tmp/bitcoin-deploy"
+          echo "   sudo bash install.sh"
+          echo ""
+          echo "5. Configure RPC credentials in bitcoin.conf:"
+          echo "   sudo nano /etc/bitcoin/bitcoin.conf"
+          echo "   # Replace \${RPC_USER} with: ${{ secrets.RPC_USER }}"
+          echo "   # Replace \${RPC_PASSWORD} with your secure password"
+          echo ""
+          echo "6. Start the service:"
+          echo "   sudo systemctl start bitcoin"
+          echo "   sudo systemctl status bitcoin"
+          echo "   sudo systemctl enable bitcoin"
+          echo ""
+          echo "7. Monitor logs:"
+          echo "   sudo journalctl -u bitcoin -f"
+          echo ""
+          echo "=== GitHub Secrets Required ==="
+          echo "Add these to your repository secrets:"
+          echo "  - RPC_USER: ${{ secrets.RPC_USER }}"
+          echo "  - RPC_PASSWORD: (set in GitHub Secrets)"
+          echo "  - SSH_PRIVATE_KEY: (your SSH private key for deployment)"
+          echo "  - SSH_HOST: (target server IP or hostname)"
+          echo "  - SSH_USER: (deployment user on target server)"
+
+      - name: Display deployment package
+        run: |
+          echo "Deployment package contents:"
+          cat deployment-pkg/bitcoin.conf
+          echo ""
+          echo "---"
+          cat deployment-pkg/bitcoin.service
+
+      - name: Deploy to remote server (optional)
+        if: ${{ secrets.SSH_PRIVATE_KEY != '' && secrets.SSH_HOST != '' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            echo "Bitcoin Core deployment started..."
+            mkdir -p ~/bitcoin-deploy
+            cd ~/bitcoin-deploy
+
+      - name: Summary
+        run: |
+          echo "✓ Deployment workflow completed"
+          echo "Next steps:"
+          echo "1. Set up GitHub Secrets (Settings > Secrets and variables > Actions)"
+          echo "2. Configure your target server SSH details"
+          echo "3. Trigger the workflow or push to deployment branch"
+          echo "4. Follow the deployment instructions above"
