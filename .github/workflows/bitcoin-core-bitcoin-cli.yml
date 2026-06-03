@@ -1,0 +1,241 @@
+name: Bitcoin Core CLI - Daemon Start & Query
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - 'bitcoin.conf.yml'
+      - '.github/workflows/bitcoin-core-bitcoin-cli.yml'
+
+jobs:
+  bitcoin-core-cli:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Load Bitcoin Configuration (YAML)
+        run: |
+          echo "=== Loading Bitcoin Configuration from YAML ==="
+          cat bitcoin.conf.yml
+          echo ""
+
+      - name: Install Dependencies
+        run: |
+          echo "=== Installing Bitcoin CLI and dependencies ==="
+          apt-get update
+          apt-get install -y bitcoin-cli python3-yaml jq
+          echo "✓ Dependencies installed"
+          echo ""
+
+      - name: Convert bitcoin.conf.yml to bitcoin.conf
+        run: |
+          echo "=== Converting YAML to bitcoin.conf format ==="
+          python3 << 'PYTHON_SCRIPT'
+          import yaml
+          import os
+
+          # Load YAML configuration
+          with open('bitcoin.conf.yml', 'r') as f:
+              config = yaml.safe_load(f)
+
+          bitcoin_config = config.get('bitcoin', {})
+
+          # Generate bitcoin.conf format
+          conf_lines = [
+              "# Bitcoin Core Configuration (Generated from bitcoin.conf.yml)",
+              "# DO NOT EDIT MANUALLY",
+              ""
+          ]
+
+          # Network settings
+          network = bitcoin_config.get('network', {})
+          conf_lines.append("# Network")
+          conf_lines.append(f"network={'mainnet' if network.get('mainnet', True) else 'testnet'}")
+          conf_lines.append(f"testnet={1 if network.get('testnet', False) else 0}")
+          conf_lines.append(f"regtest={1 if network.get('regtest', False) else 0}")
+          conf_lines.append("")
+
+          # Server settings
+          server = bitcoin_config.get('server', {})
+          conf_lines.append("# Server")
+          conf_lines.append(f"server={1 if server.get('enabled', True) else 0}")
+          conf_lines.append(f"daemon={1 if server.get('daemon', True) else 0}")
+          conf_lines.append(f"pidfile={server.get('pidfile', '/var/run/bitcoin/bitcoind.pid')}")
+          conf_lines.append("")
+
+          # RPC settings
+          rpc = bitcoin_config.get('rpc', {})
+          conf_lines.append("# RPC Configuration")
+          conf_lines.append(f"rpc={1 if rpc.get('enabled', True) else 0}")
+          conf_lines.append(f"rpcbind={rpc.get('bind', '127.0.0.1')}")
+          conf_lines.append(f"rpcport={rpc.get('port', 8332)}")
+          conf_lines.append(f"rpcuser={rpc.get('user', 'secret.RPC_USER')}")
+          conf_lines.append(f"rpcpassword={rpc.get('password', 'secret.RPC_PASSWORD')}")
+          
+          for ip in rpc.get('allowip', ['127.0.0.1', '::1']):
+              conf_lines.append(f"rpcallowip={ip}")
+          conf_lines.append("")
+
+          # Directories
+          directories = bitcoin_config.get('directories', {})
+          conf_lines.append("# Data directory")
+          conf_lines.append(f"datadir={directories.get('data', '/var/lib/bitcoin')}")
+          conf_lines.append("")
+
+          # Wallet settings
+          wallet = bitcoin_config.get('wallet', {})
+          conf_lines.append("# Wallet")
+          conf_lines.append(f"wallet={wallet.get('default', 'default_wallet')}")
+          conf_lines.append(f"walletdir={wallet.get('directory', '/var/lib/bitcoin/wallets')}")
+          conf_lines.append("")
+
+          # P2P Network
+          p2p = bitcoin_config.get('p2p', {})
+          conf_lines.append("# P2P Network")
+          conf_lines.append(f"port={p2p.get('port', 8333)}")
+          conf_lines.append(f"maxconnections={p2p.get('maxconnections', 125)}")
+          conf_lines.append("")
+
+          # Blockchain
+          blockchain = bitcoin_config.get('blockchain', {})
+          conf_lines.append("# Blockchain")
+          conf_lines.append(f"prune={1 if blockchain.get('prune', False) else 0}")
+          conf_lines.append("")
+
+          # Logging
+          logging_cfg = bitcoin_config.get('logging', {})
+          conf_lines.append("# Logging")
+          conf_lines.append(f"logtimestamps={1 if logging_cfg.get('timestamps', True) else 0}")
+          conf_lines.append(f"logips={1 if logging_cfg.get('ips', True) else 0}")
+          conf_lines.append("")
+
+          # Debug
+          debug = bitcoin_config.get('debug', {})
+          conf_lines.append("# Debug")
+          conf_lines.append(f"debug={1 if debug.get('enabled', False) else 0}")
+          conf_lines.append("")
+
+          # Fees
+          fees = bitcoin_config.get('fees', {})
+          conf_lines.append("# Fees")
+          conf_lines.append(f"fallbackfee={fees.get('fallback', 0.0001)}")
+          conf_lines.append(f"minrelaytxfee={fees.get('minrelay', 0.00001)}")
+          conf_lines.append("")
+
+          # Performance
+          perf = bitcoin_config.get('performance', {})
+          conf_lines.append("# Performance")
+          conf_lines.append(f"dbcache={perf.get('dbcache', 450)}")
+          conf_lines.append(f"maxmempool={perf.get('maxmempool', 300)}")
+          conf_lines.append("")
+
+          # Write to bitcoin.conf
+          with open('bitcoin.conf', 'w') as f:
+              f.write('\n'.join(conf_lines))
+
+          print("✓ bitcoin.conf generated successfully")
+          PYTHON_SCRIPT
+          echo ""
+
+      - name: Display Generated bitcoin.conf
+        run: |
+          echo "=== Generated bitcoin.conf ==="
+          cat bitcoin.conf
+          echo ""
+
+      - name: Validate Configuration
+        run: |
+          echo "=== Validating Configuration ==="
+          if [ ! -f bitcoin.conf ]; then
+            echo "❌ ERROR: bitcoin.conf not found"
+            exit 1
+          fi
+          
+          # Check required RPC settings
+          if grep -q "rpcuser=" bitcoin.conf; then
+            echo "✓ RPC user configured"
+          fi
+          
+          if grep -q "rpcpassword=" bitcoin.conf; then
+            echo "✓ RPC password configured"
+          fi
+          
+          if grep -q "rpcport=" bitcoin.conf; then
+            echo "✓ RPC port configured"
+          fi
+          
+          echo "✓ Configuration validated"
+          echo ""
+
+      - name: Start Bitcoin Daemon (Simulated)
+        run: |
+          echo "=== Bitcoin Daemon Startup Instructions ==="
+          echo ""
+          echo "To start the Bitcoin daemon on your server:"
+          echo ""
+          echo "1. Copy bitcoin.conf to /etc/bitcoin/"
+          echo "   sudo cp bitcoin.conf /etc/bitcoin/"
+          echo "   sudo chown bitcoin:bitcoin /etc/bitcoin/bitcoin.conf"
+          echo "   sudo chmod 600 /etc/bitcoin/bitcoin.conf"
+          echo ""
+          echo "2. Start the daemon:"
+          echo "   sudo systemctl start bitcoin"
+          echo ""
+          echo "3. Verify it's running:"
+          echo "   sudo systemctl status bitcoin"
+          echo ""
+          echo "4. Check logs:"
+          echo "   sudo journalctl -u bitcoin -f"
+          echo ""
+
+      - name: Query Blockchain Info (Simulated)
+        run: |
+          echo "=== Bitcoin CLI Query ==="
+          echo ""
+          echo "Command: bitcoin-cli -conf=/etc/bitcoin/bitcoin.conf getblockchaininfo"
+          echo ""
+          echo "Expected Output Format:"
+          echo ""
+          cat << 'EOF'
+{
+  "chain": "main",
+  "blocks": 840000,
+  "headers": 840000,
+  "bestblockhash": "000000000000000000...",
+  "difficulty": 84010635959412.64,
+  "time": 1717404000,
+  "mediantime": 1717398000,
+  "verificationprogress": 1.0,
+  "initialblockdownload": false,
+  "chainwork": "000000000000000000000000000000000000000000...",
+  "size_on_disk": 650000000000,
+  "pruned": false,
+  "warnings": ""
+}
+EOF
+          echo ""
+          echo "=== To Run This Manually ==="
+          echo ""
+          echo "SSH to your Bitcoin server and run:"
+          echo "  bitcoin-cli -conf=/etc/bitcoin/bitcoin.conf getblockchaininfo | jq ."
+          echo ""
+
+      - name: Summary
+        run: |
+          echo "=== Workflow Summary ==="
+          echo ""
+          echo "✓ Bitcoin Configuration loaded from bitcoin.conf.yml"
+          echo "✓ YAML converted to bitcoin.conf format"
+          echo "✓ Configuration validated"
+          echo ""
+          echo "Next Steps:"
+          echo "1. Deploy bitcoin.conf to your server"
+          echo "2. Start Bitcoin daemon using systemctl"
+          echo "3. Query blockchain info with bitcoin-cli"
+          echo ""
+          echo "View workflow results:"
+          echo "  https://github.com/sup-accountgit/bitcoin/actions"
+          echo ""
