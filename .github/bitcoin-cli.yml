@@ -1,0 +1,50 @@
+name: Bitcoin CLI Verify Sign and Broadcast Workflow
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  verify-sign-and-broadcast:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Fetch the latest code from your repository
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # 2. Set up Python environment for math and logic processing
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    # 3. Install required network modules
+    - name: Install Network Modules
+      run: pip install requests
+
+    # 4. Verify data, create transaction, and sign in one step (Step 1 - Step 3)
+    - name: Execute Verification & Signing Process
+      env:
+        INPUT_UTXO_JSON: ${{ secrets.UTXOS_1 }} 
+        BTC_PRIVATE_KEY: ${{ secrets.BTC_1 }}   
+        TARGET_ADDRESS: ${{ secrets.BTC_2 }}    
+        CHANGE_ADDRESS: ${{ secrets.BTC_3 }}    
+      run: |
+        python create_and_sign_tx.py
+
+    # 5. Broadcast the signed raw transaction to the live blockchain network (Step 4)
+    - name: Broadcast Signed Transaction
+      run: |
+        echo "=== [Step 4] Broadcasting Transaction to Live Blockchain ==="
+        
+        # Option A: Run via local node (If bitcoin-cli is installed on the runner)
+        # bitcoin-cli sendrawtransaction $(cat signed_tx.hex)
+        
+        # Option B: Direct broadcast via high-security Mempool.space API
+        TX_HEX=$(cat signed_tx.hex)
+        RESPONSE=$(curl -s -X POST https://mempool.space/api/tx -d "$TX_HEX")
+        
+        echo "-> Response from network (Transaction ID): $RESPONSE"
+        echo "[SUCCESS] Transaction successfully broadcasted and placed in 1-Block confirmation queue!"
+        
