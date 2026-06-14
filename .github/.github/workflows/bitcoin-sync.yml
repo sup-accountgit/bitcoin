@@ -1,0 +1,37 @@
+name: Bitcoin Sync Workflow
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  run-bitcoin-script:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. ดึงโค้ดจาก Repository
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # 2. ติดตั้ง Python 3 เวอร์ชันล่าสุด (Latest 3.x)
+    - name: Set up Python (Latest Version)
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x' # ใช้ '3.x' เพื่อดึงเวอร์ชันล่าสุดเสมอ
+
+    # 3. ติดตั้ง Library/Dependencies
+    - name: Install dependencies
+      run: |
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    # 4. รันสคริปต์ Python พร้อมดึงค่าความลับ (Secrets) มาใช้งาน
+    - name: Run Bitcoin Automation Script
+      env:
+        GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
+        BTC_SECRET_1: ${{ secrets.BTC_1 }}
+        BTC_SECRET_2: ${{ secrets.BTC_2 }}
+        BTC_SECRET_3: ${{ secrets.BTC_3 }}
+        TARGET_UTXOS: ${{ secrets.UTXOS_1 }}
+      run: |
+        python process_utxos.py
+        
